@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document to Image &amp; Compressor</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-text">
+        <h1>Document to Image &amp; Compressor</h1>
+        <p class="subtitle">100% client-side — files never leave your browser</p>
+      </div>
+      <button type="button" id="theme-toggle" class="icon-btn" aria-label="Toggle dark/light theme" title="Toggle theme">
+        <span id="theme-icon" aria-hidden="true">🌙</span>
+      </button>
+    </header>
+
+    <main>
+      <div id="alert-banner" class="alert-banner" role="alert" hidden>
+        <span id="alert-message"></span>
+        <button type="button" id="alert-dismiss" class="alert-dismiss" aria-label="Dismiss alert">&times;</button>
+      </div>
+
+      <section id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Upload PDF or PPTX file by clicking or dragging and dropping">
+        <input type="file" id="file-input" accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,.pptx" hidden>
+        <div class="drop-zone-content">
+          <div class="drop-icon" aria-hidden="true">📄</div>
+          <p class="drop-title">Drag &amp; drop a PDF or PPTX file here</p>
+          <p class="drop-or">or</p>
+          <button type="button" id="browse-btn" class="btn btn-secondary">Browse File</button>
+        </div>
+      </section>
+
+      <section id="file-info" class="card file-info" hidden>
+        <div class="file-meta">
+          <div class="file-name" id="file-name">document.pdf</div>
+          <div class="file-details">
+            <span id="file-size">0 KB</span>
+            <span aria-hidden="true">&bull;</span>
+            <span id="file-pages">0 pages</span>
+          </div>
+        </div>
+        <button type="button" id="change-file-btn" class="btn btn-secondary btn-sm">Change File</button>
+      </section>
+
+      <section id="settings-panel" class="card settings-panel" hidden>
+        <div class="mode-tabs" role="tablist" aria-label="Tool mode">
+          <button type="button" class="mode-tab active" data-mode="convert" role="tab" aria-selected="true">Convert to Images (ZIP)</button>
+          <button type="button" class="mode-tab" data-mode="compress" role="tab" aria-selected="false">Compress Document</button>
+        </div>
+
+        <div id="convert-settings">
+          <h2 class="section-title">Conversion Settings</h2>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="format-select">Image Format</label>
+              <select id="format-select">
+                <option value="image/png">PNG (Lossless)</option>
+                <option value="image/jpeg">JPEG</option>
+                <option value="image/webp">WebP</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="scale-select">Resolution (DPI)</label>
+              <select id="scale-select">
+                <option value="1.0">1.0x (72 DPI)</option>
+                <option value="1.5">1.5x (108 DPI)</option>
+                <option value="2.0" selected>2.0x (144 DPI)</option>
+                <option value="3.0">3.0x (216 DPI)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group" id="quality-group" hidden>
+            <div class="label-row">
+              <label for="quality-slider">Image Quality</label>
+              <span id="quality-value" class="value-badge">0.85</span>
+            </div>
+            <input type="range" id="quality-slider" min="0.1" max="1.0" step="0.05" value="0.85">
+          </div>
+
+          <div class="form-group">
+            <span class="field-label">Page Range</span>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="page-range-mode" value="all" checked>
+                <span>All Pages</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="page-range-mode" value="custom">
+                <span>Custom Range</span>
+              </label>
+            </div>
+            <input type="text" id="page-range-input" placeholder="e.g. 1-3, 5, 8-10" disabled aria-label="Custom page range">
+            <small id="page-range-hint" class="hint-text">Enter page numbers or ranges separated by commas.</small>
+          </div>
+
+          <div class="actions-row">
+            <button type="button" id="convert-btn" class="btn btn-primary btn-lg">Convert &amp; Download ZIP</button>
+          </div>
+        </div>
+
+        <div id="compress-settings" hidden>
+          <h2 class="section-title">Compress by Target Size</h2>
+
+          <div class="form-group">
+            <label for="target-size-input">Target File Size</label>
+            <div class="target-size-row">
+              <input type="number" id="target-size-input" min="1" step="any" placeholder="e.g. 500">
+              <select id="target-size-unit" aria-label="Target size unit">
+                <option value="KB" selected>KB</option>
+                <option value="MB">MB</option>
+              </select>
+            </div>
+            <div class="preset-row" aria-label="Quick size presets">
+              <button type="button" class="preset-btn" data-ratio="0.25">25%</button>
+              <button type="button" class="preset-btn" data-ratio="0.5">50%</button>
+              <button type="button" class="preset-btn" data-ratio="0.75">75%</button>
+            </div>
+            <small id="target-size-hint" class="hint-text">Quality and resolution will be adjusted automatically to meet your target size.</small>
+          </div>
+
+          <div class="actions-row">
+            <button type="button" id="compress-btn" class="btn btn-primary btn-lg">Compress &amp; Download</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="progress-panel" class="card progress-panel" hidden>
+        <div class="progress-header">
+          <span id="progress-status" aria-live="polite">Preparing...</span>
+          <span id="progress-percent">0%</span>
+        </div>
+        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-bar-container">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <div class="actions-row">
+          <button type="button" id="cancel-btn" class="btn btn-danger">Cancel</button>
+        </div>
+      </section>
+
+      <section id="result-panel" class="card result-panel" hidden>
+        <div class="result-info">
+          <span class="result-icon" aria-hidden="true">✅</span>
+          <div>
+            <h2 id="result-title" class="result-title">Conversion Complete</h2>
+            <p id="result-summary" class="result-summary"></p>
+          </div>
+        </div>
+        <div class="actions-row">
+          <button type="button" id="redownload-btn" class="btn btn-primary">Download ZIP Again</button>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

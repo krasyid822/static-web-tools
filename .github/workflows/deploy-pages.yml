@@ -1,0 +1,96 @@
+name: Deploy Static Web Tools to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Select and stage static files
+        run: |
+          rm -rf _site
+          mkdir -p _site
+          touch _site/.nojekyll
+
+          # Copy root-level static files if present
+          for file in index.html 404.html CNAME robots.txt sitemap.xml site.webmanifest manifest.json favicon.*; do
+            if [ -f "$file" ]; then
+              cp "$file" _site/
+            fi
+          done
+
+          # Copy root-level static asset directories if present
+          for dir in css js assets; do
+            if [ -d "$dir" ]; then
+              rsync -av \
+                --exclude='*.md' \
+                --exclude='*.sh' \
+                --exclude='.git*' \
+                --exclude='.DS_Store' \
+                --exclude='Thumbs.db' \
+                --exclude='.vscode/' \
+                --exclude='.idea/' \
+                --exclude='LICENSE*' \
+                "$dir/" "_site/$dir/"
+            fi
+          done
+
+          # Copy each standalone project directory that has an index.html
+          for dir in */; do
+            dir_name="${dir%/}"
+            case "$dir_name" in
+              .*|_site) continue ;;
+            esac
+
+            if [ -f "$dir_name/index.html" ]; then
+              rsync -av \
+                --exclude='*.md' \
+                --exclude='*.sh' \
+                --exclude='.git*' \
+                --exclude='.DS_Store' \
+                --exclude='Thumbs.db' \
+                --exclude='.vscode/' \
+                --exclude='.idea/' \
+                --exclude='LICENSE*' \
+                "$dir_name/" "_site/$dir_name/"
+            fi
+          done
+
+          echo "=== Files staged for GitHub Pages ==="
+          find _site -type f | sort
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
