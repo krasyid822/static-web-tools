@@ -26,6 +26,22 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+          cache-dependency-path: tugas-kuliah/kedai-kopi-nusantara-prototype/pnpm-lock.yaml
+
+      - name: Build kedai-kopi-nusantara-prototype
+        working-directory: tugas-kuliah/kedai-kopi-nusantara-prototype
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec vite build --base=./
+
       - name: Select and stage static files
         run: |
           rm -rf _site
@@ -72,9 +88,18 @@ jobs:
                 --exclude='.vscode/' \
                 --exclude='.idea/' \
                 --exclude='LICENSE*' \
+                --exclude='kedai-kopi-nusantara-prototype/' \
                 "$dir_name/" "_site/$dir_name/"
             fi
           done
+
+          # Deploy only the dist/ contents for Vite-built projects
+          if [ -d "tugas-kuliah/kedai-kopi-nusantara-prototype/dist" ]; then
+            mkdir -p "_site/tugas-kuliah/kedai-kopi-nusantara-prototype"
+            rsync -av \
+              "tugas-kuliah/kedai-kopi-nusantara-prototype/dist/" \
+              "_site/tugas-kuliah/kedai-kopi-nusantara-prototype/"
+          fi
 
           echo "=== Files staged for GitHub Pages ==="
           find _site -type f | sort
