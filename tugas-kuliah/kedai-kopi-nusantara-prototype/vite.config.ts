@@ -19,7 +19,8 @@ export default defineConfig(({ mode }) => {
       minify: !emitSourcemaps,
     },
     plugins: [
-react(),
+      stripLocalDistRedirect(),
+      react(),
       tailwindcss(),
       figmaSiteConfiguration(siteConfiguration),
       figmaErrorOverlayReplay(),
@@ -72,6 +73,19 @@ type FigmaSiteConfiguration = {
   }
   accessibility?: {
     addBypassLinks?: boolean
+  }
+}
+
+/** Strips the local-only ./dist/ redirect from index.html during Vite serve and build. */
+function stripLocalDistRedirect(): Plugin {
+  return {
+    name: 'strip-local-dist-redirect',
+    transformIndexHtml: {
+      order: 'pre',
+      handler(html) {
+        return html.replace(/\s*<!-- local-dist-redirect:start -->[\s\S]*?<!-- local-dist-redirect:end -->/g, '')
+      },
+    },
   }
 }
 

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Install Aplikasi Gemini</title>
+    <link rel="manifest" href="manifest.json"> 
+    <link rel="icon" type="image/png" href="icon-192x192.png">
+    <meta name="theme-color" content="#4285F4"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --gemini-blue: #D3D3D3;
+            --background-color: #0f0f0f;
+            --card-background: #ffffff;
+            --text-primary: #1f1f1f;
+            --text-secondary: #5f6368;
+        }
+        body {
+            font-family: 'Google Sans', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--background-color);
+            transition: opacity 0.5s ease-in-out;
+            opacity: 0;
+            opacity: 1; /* Selalu terlihat */
+        }
+        .install-card {
+            background-color: var(--card-background);
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            display: flex; /* Kartu selalu ditampilkan */
+            flex-direction: column;
+            align-items: center;
+        }
+        .logo {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0 0 8px 0;
+        }
+        p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin: 0 0 24px 0;
+            line-height: 1.5;
+        }
+        #installButton {
+            display: none; /* Tombol instalasi disembunyikan secara default */
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            color: white;
+            background-color: var(--gemini-blue);
+            border: none;
+            border-radius: 99px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+            margin-bottom: 8px; /* Beri jarak ke link di bawahnya */
+        }
+        #installButton.show {
+            display: flex; /* Tampilkan tombol jika PWA bisa diinstal */
+        }
+        #installButton:hover {
+            background-color: #1a5abf;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        #continueLink {
+            margin-top: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--gemini-blue);
+            text-decoration: none;
+            padding: 8px;
+        }
+        #continueLink:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="install-card" id="installCard">
+        <img src="icon-192x192.png" alt="Clark Logo" class="logo">
+        <h1>Instal Aplikasi Clark</h1>
+        <p>Dapatkan akses lebih cepat dan fokus ke Portofolio Ruswanda Clark langsung dari layar Anda.</p>
+        
+        <button id="installButton" onclick="handleInstallClick()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span>Instal Sekarang</span>
+        </button>
+        
+        <a href="https://ruswanda.my.id/" id="continueLink">Lanjutkan di Browser</a>
+    </div>
+
+    <script>
+        const TARGET_URL = 'https://ruswanda.my.id/';
+        let deferredPrompt;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+                window.location.href = TARGET_URL;
+            }
+        });
+
+        // Tampilkan tombol instalasi jika aplikasi bisa diinstal
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installButton = document.getElementById('installButton');
+            if (installButton) {
+                // Tampilkan tombolnya, bukan kartunya
+                installButton.classList.add('show');
+            }
+        });
+
+        function handleInstallClick() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(() => {
+                    deferredPrompt = null;
+                    document.getElementById('installButton').classList.remove('show');
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MetricPrint Studio — 1:1 Physical-Scale Image Cropping &amp; Print Layout</title>
+  <meta name="description" content="Precision 1:1 physical-scale print layout and image cropping workspace in millimeters (mm) and centimeters (cm). Supports ISO/ANSI paper sizes, fixed-frame directional crop expansion, touchpad pinch-to-zoom, and printer margin calibration.">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="MetricPrint Studio — 1:1 Physical-Scale Print Layout">
+  <meta property="og:description" content="Design, crop, and print images at exact 1:1 physical dimensions (mm/cm) with printer margin calibration.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MetricPrint Studio — 1:1 Physical-Scale Print Layout">
+  <meta name="twitter:description" content="Precision physical-scale image cropping and direct print layout in mm and cm.">
+  <link rel="stylesheet" href="./css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "MetricPrint Studio",
+    "applicationCategory": "DesignApplication",
+    "operatingSystem": "Any",
+    "description": "Web-based precision physical-scale print layout and image cropping workspace maintaining 1:1 physical accuracy in mm and cm.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- Top Toolbar -->
+  <header class="toolbar" role="banner">
+    <div class="toolbar-group toolbar-brand">
+      <h1 class="app-title">MetricPrint Studio</h1>
+      <button type="button" id="btn-paper-setup" class="btn btn-secondary btn-sm" title="Change Paper Size &amp; Orientation">
+        <span id="toolbar-paper-label">A4 (210 × 297 mm)</span>
+      </button>
+    </div>
+
+    <div class="toolbar-group toolbar-actions">
+      <div class="unit-switch" role="group" aria-label="Measurement Unit">
+        <button type="button" class="unit-btn active" data-unit="mm">mm</button>
+        <button type="button" class="unit-btn" data-unit="cm">cm</button>
+      </div>
+
+      <button type="button" id="btn-add-image" class="btn btn-primary btn-sm">
+        + Add Image
+      </button>
+      <input type="file" id="file-image-input" accept="image/*" multiple hidden>
+
+      <div class="zoom-controls" role="group" aria-label="Canvas Zoom">
+        <button type="button" id="btn-zoom-out" class="btn btn-icon btn-sm" title="Zoom Out">−</button>
+        <span id="zoom-label" class="zoom-label">100%</span>
+        <button type="button" id="btn-zoom-in" class="btn btn-icon btn-sm" title="Zoom In">+</button>
+        <button type="button" id="btn-zoom-fit" class="btn btn-secondary btn-sm" title="Fit Paper to Screen">Fit</button>
+      </div>
+    </div>
+
+    <div class="toolbar-group toolbar-print">
+      <button type="button" id="btn-open-calibration" class="btn btn-secondary btn-sm" title="Calibrate Printer Margins">
+        Calibrate Printer
+      </button>
+      <button type="button" id="btn-open-print" class="btn btn-accent btn-sm" title="Print Setup &amp; Direct Print">
+        Print Setup
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace Viewport -->
+  <main id="workspace-viewport" class="workspace-viewport" tabindex="0" aria-label="Print Layout Canvas">
+    <div id="canvas-transform-layer" class="canvas-transform-layer">
+      <!-- Outer Top Dimension Guide -->
+      <div id="paper-guide-top" class="paper-guide paper-guide-top" aria-hidden="true">
+        <div id="ruler-top-ticks" class="ruler-ticks ruler-ticks-top"></div>
+        <span id="paper-width-badge" class="dim-badge dim-badge-paper">210 mm</span>
+      </div>
+
+      <!-- Outer Left Dimension Guide -->
+      <div id="paper-guide-left" class="paper-guide paper-guide-left" aria-hidden="true">
+        <div id="ruler-left-ticks" class="ruler-ticks ruler-ticks-left"></div>
+        <span id="paper-height-badge" class="dim-badge dim-badge-paper">297 mm</span>
+      </div>
+
+      <!-- Physical Paper Sheet -->
+      <section id="paper-sheet" class="paper-sheet" aria-label="Paper Sheet">
+        <div id="safe-margin-overlay" class="safe-margin-overlay" aria-hidden="true"></div>
+        <div id="images-layer" class="images-layer"></div>
+        <div id="empty-canvas-hint" class="empty-canvas-hint">
+          <p>Drop, paste (Ctrl+V), or click <strong>+ Add Image</strong> to place images.</p>
+          <p class="hint-sub">Right-click any image for Crop &amp; tools. Pinch touchpad to zoom.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Right-Click Image Context Menu -->
+  <nav id="image-context-menu" class="context-menu hidden" role="menu" aria-label="Image Actions">
+    <button type="button" class="context-item" data-action="crop" role="menuitem">Crop (Fixed Frame)</button>
+    <button type="button" class="context-item" data-action="resize" role="menuitem">Set Physical Size…</button>
+    <button type="button" class="context-item" data-action="duplicate" role="menuitem">Duplicate</button>
+    <hr class="context-sep">
+    <button type="button" class="context-item" data-action="front" role="menuitem">Bring to Front</button>
+    <button type="button" class="context-item" data-action="back" role="menuitem">Send to Back</button>
+    <hr class="context-sep">
+    <button type="button" class="context-item" data-action="reset-crop" role="menuitem">Reset Crop</button>
+    <button type="button" class="context-item context-danger" data-action="delete" role="menuitem">Delete</button>
+  </nav>
+
+  <!-- Floating Crop Mode Panel -->
+  <aside id="crop-mode-panel" class="floating-panel hidden" aria-label="Crop Mode Controls">
+    <div class="panel-header">
+      <h2>Crop Mode</h2>
+      <span class="panel-badge">Frame Locked</span>
+    </div>
+    <p class="panel-help">Drag inside the frame to pan the image. Use zoom slider or wheel to scale.</p>
+
+    <div class="form-row">
+      <label for="crop-aspect-select">Aspect Ratio</label>
+      <select id="crop-aspect-select" class="input-control">
+        <option value="free">Free</option>
+        <option value="1:1">1:1 (Square)</option>
+        <option value="3:2">3:2</option>
+        <option value="2:3">2:3</option>
+        <option value="4:3">4:3</option>
+        <option value="3:4">3:4</option>
+        <option value="16:9">16:9</option>
+        <option value="4:5">4:5</option>
+      </select>
+    </div>
+
+    <div class="form-grid-2">
+      <div class="form-row">
+        <label for="crop-width-input">Width (<span class="unit-text">mm</span>)</label>
+        <input type="number" id="crop-width-input" class="input-control" step="0.1" min="1">
+      </div>
+      <div class="form-row">
+        <label for="crop-height-input">Height (<span class="unit-text">mm</span>)</label>
+        <input type="number" id="crop-height-input" class="input-control" step="0.1" min="1">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label for="crop-zoom-slider">Image Scale: <span id="crop-zoom-val">100%</span></label>
+      <input type="range" id="crop-zoom-slider" min="20" max="400" value="100" step="1">
+    </div>
+
+    <div class="expand-section">
+      <span class="section-label">Directional Expand (adds base unit)</span>
+      <div class="expand-grid">
+        <button type="button" class="btn btn-secondary btn-sm expand-btn" data-dir="top">↑ Top</button>
+        <div class="expand-mid">
+          <button type="button" class="btn btn-secondary btn-sm expand-btn" data-dir="left">← Left</button>
+          <button type="button" class="btn btn-secondary btn-sm expand-btn" data-dir="right">Right →</button>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm expand-btn" data-dir="bottom">↓ Bottom</button>
+      </div>
+    </div>
+
+    <div class="panel-footer">
+      <button type="button" id="btn-crop-done" class="btn btn-primary btn-full">Done &amp; Commit Crop</button>
+    </div>
+  </aside>
+
+  <!-- Startup Paper Setup Modal -->
+  <div id="startup-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="startup-modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="startup-modal-title">Paper Size Setup</h2>
+        <p class="modal-subtitle">Configure physical paper dimensions in metric units (mm / cm).</p>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid-2">
+          <div class="form-row">
+            <label>Display Unit</label>
+            <div class="segmented-control" id="startup-unit-toggle">
+              <button type="button" class="seg-btn active" data-unit="mm">Millimeters (mm)</button>
+              <button type="button" class="seg-btn" data-unit="cm">Centimeters (cm)</button>
+            </div>
+          </div>
+          <div class="form-row">
+            <label>Orientation</label>
+            <div class="segmented-control" id="startup-orientation-toggle">
+              <button type="button" class="seg-btn active" data-orient="portrait">Portrait</button>
+              <button type="button" class="seg-btn" data-orient="landscape">Landscape</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>Paper Size</label>
+          <div id="paper-dropdown-container"></div>
+        </div>
+
+        <div id="custom-paper-fields" class="form-grid-2 hidden">
+          <div class="form-row">
+            <label for="custom-paper-width">Custom Width (<span class="unit-text">mm</span>)</label>
+            <input type="number" id="custom-paper-width" class="input-control" step="0.1" min="10" value="210">
+          </div>
+          <div class="form-row">
+            <label for="custom-paper-height">Custom Height (<span class="unit-text">mm</span>)</label>
+            <input type="number" id="custom-paper-height" class="input-control" step="0.1" min="10" value="297">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btn-start-workspace" class="btn btn-primary btn-full">Start Workspace</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Print Setup Modal -->
+  <div id="print-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="print-modal-title">
+    <div class="modal-card">
+      <div class="modal-header modal-header-row">
+        <div>
+          <h2 id="print-modal-title">Print Setup &amp; Margin Spec</h2>
+          <p class="modal-subtitle">Select your printer to visualize safe printable margins.</p>
+        </div>
+        <button type="button" class="btn-close-modal" data-close="print-modal" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <label>Printer Profile</label>
+          <div id="printer-dropdown-container"></div>
+        </div>
+
+        <div id="borderless-row" class="form-row checkbox-row hidden">
+          <label class="checkbox-label">
+            <input type="checkbox" id="chk-borderless">
+            <span>Borderless Mode (sets all margins to 0 mm)</span>
+          </label>
+        </div>
+
+        <div class="form-grid-4">
+          <div class="form-row">
+            <label for="margin-top-input">Top (<span class="unit-text">mm</span>)</label>
+            <input type="number" id="margin-top-input" class="input-control" step="0.1" min="0" value="3">
+          </div>
+          <div class="form-row">
+            <label for="margin-bottom-input">Bottom (<span class="unit-text">mm</span>)</label>
+            <input type="number" id="margin-bottom-input" class="input-control" step="0.1" min="0" value="3">
+          </div>
+          <div class="form-row">
+            <label for="margin-left-input">Left (<span class="unit-text">mm</span>)</label>
+            <input type="number" id="margin-left-input" class="input-control" step="0.1" min="0" value="3">
+          </div>
+          <div class="form-row">
+            <label for="margin-right-input">Right (<span class="unit-text">mm</span>)</label>
+            <input type="number" id="margin-right-input" class="input-control" step="0.1" min="0" value="3">
+          </div>
+        </div>
+
+        <div id="save-printer-row" class="form-row hidden">
+          <label for="custom-printer-name">Save Custom Profile As (optional)</label>
+          <div class="input-with-btn">
+            <input type="text" id="custom-printer-name" class="input-control" placeholder="e.g. My Office Printer">
+            <button type="button" id="btn-save-printer-profile" class="btn btn-secondary btn-sm">Save</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-between">
+        <button type="button" id="btn-print-to-calibration" class="btn btn-secondary">Calibrate Margins…</button>
+        <button type="button" id="btn-execute-print" class="btn btn-accent">Print Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Printer Boundary Calibration Modal -->
+  <div id="calibration-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="cal-modal-title">
+    <div class="modal-card modal-card-lg">
+      <div class="modal-header modal-header-row">
+        <div>
+          <h2 id="cal-modal-title">Printer Boundary Calibration</h2>
+          <p class="modal-subtitle">Print the stepped test pattern, then verify your printer's exact physical margins.</p>
+        </div>
+        <button type="button" class="btn-close-modal" data-close="calibration-modal" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="cal-top-bar">
+          <div id="cal-pattern-preview" class="cal-pattern-preview" aria-label="Boundary Test Pattern Preview"></div>
+          <div class="cal-instructions">
+            <p><strong>Step 1:</strong> Print the Boundary Test Pattern at <strong>100% / Actual Size</strong> (disable "Fit to Page").</p>
+            <button type="button" id="btn-print-calibration" class="btn btn-primary">Print Calibration Sheet</button>
+            <p class="hint-sub">Pattern matches your active paper: <strong id="cal-paper-info">210 × 297 mm</strong></p>
+          </div>
+        </div>
+
+        <div class="cal-tabs" role="tablist">
+          <button type="button" class="cal-tab active" data-tab="visual" role="tab">1. Ruler-Free Visual</button>
+          <button type="button" class="cal-tab" data-tab="ruler-camera" role="tab">2. Ruler / Camera-Assisted</button>
+        </div>
+
+        <div id="cal-tab-visual" class="cal-tab-panel">
+          <p class="panel-help">Look at the printed sheet and enter the <strong>number of the outermost visible line (1–15)</strong> on each edge (1 = 1 mm, 15 = 15 mm).</p>
+          <div class="form-grid-4">
+            <div class="form-row">
+              <label for="cal-vis-top">Top Line #</label>
+              <input type="number" id="cal-vis-top" class="input-control" min="0" max="15" step="1" value="3">
+            </div>
+            <div class="form-row">
+              <label for="cal-vis-bottom">Bottom Line #</label>
+              <input type="number" id="cal-vis-bottom" class="input-control" min="0" max="15" step="1" value="3">
+            </div>
+            <div class="form-row">
+              <label for="cal-vis-left">Left Line #</label>
+              <input type="number" id="cal-vis-left" class="input-control" min="0" max="15" step="1" value="3">
+            </div>
+            <div class="form-row">
+              <label for="cal-vis-right">Right Line #</label>
+              <input type="number" id="cal-vis-right" class="input-control" min="0" max="15" step="1" value="3">
+            </div>
+          </div>
+        </div>
+
+        <div id="cal-tab-ruler-camera" class="cal-tab-panel hidden">
+          <p class="panel-help">Measure the unprinted white edge with a ruler (<span class="unit-text">mm</span>), or upload a photo/scan of the printed sheet for automatic edge detection.</p>
+          <div class="form-row">
+            <label for="cal-photo-input">Upload Photo / Scan (optional)</label>
+            <input type="file" id="cal-photo-input" accept="image/*" class="input-control">
+            <canvas id="cal-detect-canvas" class="cal-detect-canvas hidden"></canvas>
+            <p id="cal-detect-status" class="hint-sub"></p>
+          </div>
+          <div class="form-grid-4">
+            <div class="form-row">
+              <label for="cal-rul-top">Top (<span class="unit-text">mm</span>)</label>
+              <input type="number" id="cal-rul-top" class="input-control" min="0" step="0.1" value="3">
+            </div>
+            <div class="form-row">
+              <label for="cal-rul-bottom">Bottom (<span class="unit-text">mm</span>)</label>
+              <input type="number" id="cal-rul-bottom" class="input-control" min="0" step="0.1" value="3">
+            </div>
+            <div class="form-row">
+              <label for="cal-rul-left">Left (<span class="unit-text">mm</span>)</label>
+              <input type="number" id="cal-rul-left" class="input-control" min="0" step="0.1" value="3">
+            </div>
+            <div class="form-row">
+              <label for="cal-rul-right">Right (<span class="unit-text">mm</span>)</label>
+              <input type="number" id="cal-rul-right" class="input-control" min="0" step="0.1" value="3">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="cal-profile-name">Save Calibrated Profile Name</label>
+          <input type="text" id="cal-profile-name" class="input-control" placeholder="e.g. Calibrated Epson L3210">
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-between">
+        <button type="button" class="btn btn-secondary" data-close="calibration-modal">Cancel</button>
+        <button type="button" id="btn-apply-calibration" class="btn btn-primary">Apply &amp; Save Margins</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dedicated 1:1 Physical Print Stage (only visible in @media print) -->
+  <div id="print-stage" class="print-stage" aria-hidden="true"></div>
+
+  <!-- Scripts loaded in dependency order (no ES modules for file:// compatibility) -->
+  <script defer src="./js/data.js"></script>
+  <script defer src="./js/state.js"></script>
+  <script defer src="./js/ui-dropdown.js"></script>
+  <script defer src="./js/canvas.js"></script>
+  <script defer src="./js/image-manager.js"></script>
+  <script defer src="./js/crop-mode.js"></script>
+  <script defer src="./js/print-engine.js"></script>
+  <script defer src="./js/calibration.js"></script>
+  <script defer src="./js/main.js"></script>
+</body>
+</html>

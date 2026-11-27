@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perekam Layar Online Gratis — Rekam Layar &amp; Audio di Browser</title>
+  <meta name="description" content="Rekam layar, audio sistem, dan mikrofon langsung dari browser secara gratis tanpa instalasi. 100% privat dan diproses di perangkat Anda.">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Perekam Layar Online Gratis — Rekam Layar &amp; Audio di Browser">
+  <meta property="og:description" content="Rekam layar, tab, atau jendela aplikasi beserta audio sistem dan mikrofon langsung di browser tanpa ekstensi.">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Perekam Layar Online Gratis">
+  <meta name="twitter:description" content="Rekam layar, audio sistem, dan mikrofon langsung dari browser secara gratis dan privat.">
+
+  <link rel="stylesheet" href="./css/style.css">
+  <script type="module" src="./js/app.js" defer></script>
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Perekam Layar Online",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "IDR"
+      },
+      "description": "Aplikasi perekam layar berbasis web yang merekam layar, audio sistem, dan mikrofon langsung di sisi klien tanpa mengirim data ke server."
+    }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <div class="site-header__brand">
+        <span class="site-header__logo" aria-hidden="true">●</span>
+        <span class="site-header__name">Perekam Layar</span>
+      </div>
+      <p class="site-header__tagline">100% Privat &bull; Tanpa Instalasi</p>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <section class="hero" aria-labelledby="hero-title">
+      <h1 id="hero-title" class="hero__title">Perekam Layar &amp; Audio Online</h1>
+      <p class="hero__subtitle">
+        Rekam layar, jendela aplikasi, atau tab browser beserta audio sistem dan mikrofon langsung di perangkat Anda.
+      </p>
+    </section>
+
+    <section class="recorder" aria-label="Area perekaman layar">
+      <div class="recorder__topbar">
+        <div id="status-badge" class="status-badge status-badge--idle" aria-live="polite">
+          <span class="status-badge__dot" aria-hidden="true"></span>
+          <span id="status-text" class="status-badge__text">Siap Merekam</span>
+        </div>
+        <div class="recorder__timer-wrap">
+          <span class="recorder__timer-label">Durasi:</span>
+          <time id="timer" class="recorder__timer" aria-live="polite">00:00</time>
+        </div>
+      </div>
+
+      <div id="status-message" class="status-message" role="status" aria-live="polite" hidden></div>
+
+      <div class="recorder__stage">
+        <video id="preview-video" class="recorder__video" playsinline muted></video>
+        <div id="empty-state" class="recorder__empty">
+          <div class="recorder__empty-icon" aria-hidden="true">&#9654;</div>
+          <p class="recorder__empty-title">Pratinjau Layar</p>
+          <p class="recorder__empty-desc">Pilih sumber audio di bawah lalu tekan <strong>Mulai Rekam</strong> untuk memilih layar atau tab.</p>
+        </div>
+      </div>
+
+      <div class="recorder__options">
+        <fieldset class="audio-options" id="audio-options">
+          <legend class="audio-options__legend">Sumber Audio</legend>
+          <label class="audio-options__item" for="opt-system-audio">
+            <input type="checkbox" id="opt-system-audio" class="audio-options__checkbox" checked>
+            <span class="audio-options__label">Audio Sistem / Tab</span>
+          </label>
+          <label class="audio-options__item" for="opt-mic-audio">
+            <input type="checkbox" id="opt-mic-audio" class="audio-options__checkbox">
+            <span class="audio-options__label">Mikrofon</span>
+          </label>
+        </fieldset>
+      </div>
+
+      <div class="controls">
+        <button type="button" id="btn-start" class="controls__btn controls__btn--record">
+          Mulai Rekam
+        </button>
+        <button type="button" id="btn-pause" class="controls__btn controls__btn--pause" hidden>
+          Jeda
+        </button>
+        <button type="button" id="btn-resume" class="controls__btn controls__btn--resume" hidden>
+          Lanjutkan
+        </button>
+        <button type="button" id="btn-stop" class="controls__btn controls__btn--stop" hidden>
+          Berhenti
+        </button>
+        <a id="btn-download" class="controls__btn controls__btn--download" download hidden>
+          Unduh Video
+        </a>
+        <button type="button" id="btn-reset" class="controls__btn controls__btn--reset" hidden>
+          Rekam Ulang
+        </button>
+      </div>
+
+      <p id="recording-meta" class="recorder__meta" hidden></p>
+    </section>
+
+    <section class="info-section" aria-labelledby="info-title">
+      <h2 id="info-title" class="info-section__title">Cara Kerja &amp; Privasi</h2>
+      <div class="info-grid">
+        <article class="info-card">
+          <h3 class="info-card__title">1. Pilih Layar &amp; Audio</h3>
+          <p class="info-card__desc">
+            Klik <strong>Mulai Rekam</strong> untuk memilih seluruh layar, jendela aplikasi, atau tab browser. Centang Audio Sistem atau Mikrofon sesuai kebutuhan.
+          </p>
+        </article>
+        <article class="info-card">
+          <h3 class="info-card__title">2. Kontrol Fleksibel</h3>
+          <p class="info-card__desc">
+            Gunakan tombol <strong>Jeda</strong> dan <strong>Lanjutkan</strong> kapan saja selama perekaman berlangsung, lalu tekan <strong>Berhenti</strong> saat selesai.
+          </p>
+        </article>
+        <article class="info-card">
+          <h3 class="info-card__title">3. 100% di Browser</h3>
+          <p class="info-card__desc">
+            Seluruh video dan audio diproses di memori perangkat Anda. Tidak ada rekaman yang diunggah ke server mana pun.
+          </p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <p>Perekam Layar Online &mdash; Berjalan sepenuhnya di browser Anda.</p>
+    </div>
+  </footer>
+</body>
+</html>

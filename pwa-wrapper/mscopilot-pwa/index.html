@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft Copilot</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="rsc\png\icon.png">
+    <base href="base.html">
+    <meta name="theme-color" content="#317EFB"/>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('service-worker.js').then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Update UI notify the user they can install the PWA
+            showInstallPromotion();
+        });
+
+        function showInstallPromotion() {
+            const installButton = document.createElement('button');
+            installButton.textContent = 'Install PWA';
+            document.body.appendChild(installButton);
+
+            installButton.addEventListener('click', () => {
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                    // Redirect to the URL after the user responds to the prompt
+                    window.location.href = 'https://copilot.microsoft.com';
+                });
+            });
+        }
+
+        function checkIfPWAInstalled() {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+            if (isStandalone) {
+                window.location.href = 'https://copilot.microsoft.com';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkIfPWAInstalled();
+        });
+
+        /* document.addEventListener('DOMContentLoaded', function() {
+            window.location.href = 'https://sipadi-eng.polmed.ac.id/my/';
+        }); */
+    </script>
+</head>
+<body>
+    <!-- old domain -->
+  <!-- Click <a href="https://sipadi-eng.polmed.ac.id/my/">here</a> if not redirected. -->
+</body>
+</html>

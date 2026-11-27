@@ -1,0 +1,24 @@
+{
+  "name": "Ruswanda Clark Portofolio",
+  "short_name": "Ruswanda Clark",
+  "description": "Ruswanda Clark - Profesional Kreatif & Pemikir",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0f0f0f",
+  "theme_color": "#D3D3D3",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
